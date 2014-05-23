@@ -38,6 +38,7 @@ module se_support
   character(len=*), parameter :: dataset_cycle_name2 = 'ISO_MASSF'   ! Name of the dataset within a cycle
   character(len=*), parameter :: format_file = "(I7.7)"          ! Format for the file  name
   character(len=*), parameter :: format_cycle = "(I10)"          ! Format for the cycle name
+  character(len=80), parameter :: seversion = "2.0"              ! SE Version number
 
   character(len=256) :: filename, prefix
   integer            :: num_mod_seoutput        
@@ -216,14 +217,16 @@ contains
     logical, pointer                    :: is_integer(:)
     double precision, pointer           :: iso_charge(:), iso_mass(:), iso_meric_state(:)
 
-    integer i
+    integer i,majnum, minnum, relnum
+    character(len=80) :: hdf5version
+    character(len=16) :: format_hdf5
 
     number_of_species = s% species
     allocate(isotoprint(number_of_species))
     allocate(iso_charge(number_of_species))
     allocate(iso_mass(number_of_species))
     allocate(iso_meric_state(number_of_species))
-      
+
     do i=1, number_of_species
        isotoprint(i) = s% chem_id(i)
        myiso = isotoprint(i)
@@ -243,6 +246,19 @@ contains
     call add_attribute_chr(file_id, 1, "codev", value_chr)
     call scalar_to_rank1_chr(modname, value_chr)
     call add_attribute_chr(file_id, 1, "modname", value_chr)
+    ! Version numbers
+    ! HDF5
+    call h5get_libversion_f(majnum, minnum, relnum, error)
+    format_hdf5 = '(i1,a1,i1,a1,i2)'
+    if (minnum > 9) then
+       format_hdf5 = '(i1,a1,i2,a1,i2)'
+    end if
+    write(hdf5version,format_hdf5) majnum,'.',minnum,'.',relnum
+    call scalar_to_rank1_chr(hdf5version, value_chr)
+    call add_attribute_chr(file_id, 1, "HDF5_version", value_chr)
+    ! SE
+    call scalar_to_rank1_chr(seversion, value_chr)
+    call add_attribute_chr(file_id, 1, "SE_version", value_chr)
     ! Add double attributes
     call scalar_to_rank1_dbl(s% initial_mass, value_dbl)
     call add_attribute_dbl(file_id, 1, "mini", value_dbl)
@@ -749,9 +765,9 @@ contains
     ! Change the name of a cycle profile
     character(len=maxlen_profile_column_name) :: str
     
-    if (str(1:len_trim(str)) .eq. 'mixing_type ') then
-       str = 'convection_indicator'
-    endif
+    !if (str(1:len_trim(str)) .eq. 'mixing_type ') then
+    !   str = 'convection_indicator'
+    !endif
        
   end subroutine mesa2se_profile
 
