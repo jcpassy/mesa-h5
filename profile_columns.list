@@ -106,7 +106,7 @@
    !dq ! mass of zone as a fraction of total star mass
    !logxq ! log10(1-q)
 
-   add_abundances ! this adds all of the isos that are in the current net
+   !add_abundances ! this adds all of the isos that are in the current net
    ! NOTE: you can list specific isotopes by giving their names (from chem_def)
       
       !h1
@@ -125,7 +125,7 @@
 
    ! ergs/g/sec for reaction categories
    
-      add_reaction_categories ! this adds all the reaction categories
+      !add_reaction_categories ! this adds all the reaction categories
       ! NOTE: you can list specific categories by giving their names (from net_def)
       
       !pp
