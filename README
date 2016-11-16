@@ -1,0 +1,14 @@
+This is the new implementation of HDF5 support for MESA based on the former SE format.
+It provides mppnp compatibilty.
+Created by Jean-Claude Passy.
+Tested by Falk Herwig, Umberto Battino, and Pavel Denissenkov.
+(c) 2016
+For questions/comments, please contact the MESA users list: 
+mesa-users [at] lists.sourceforge.net.
+
+
+Things to talk about:
+
+       - isomeric_state
+       - abundances and ISO_MASSF
+       - dynamically changing net (ajust_net test_suite)
