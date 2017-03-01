@@ -1,10 +1,12 @@
+The HDF5 framework for MESA
+===========================
+
 This is the new implementation of HDF5 support for MESA based on the former SE format.
 It provides mppnp compatibilty.
 Created by Jean-Claude Passy.
 Tested by Falk Herwig, Umberto Battino, and Pavel Denissenkov.
 (c) 2016
-For questions/comments, please contact Falk Herwig (fherwig [at] uvic.ca)
-or the MESA users list (mesa-users [at] lists.sourceforge.net).
+For questions/comments, please contact Jean-Claude Passy (jean-claude.passy [at] tuebingen.mpg.de) or Falk Herwig (fherwig [at] uvic.ca).
 
 
 INSTALLATION:
