@@ -89,10 +89,13 @@
         logical, intent(in) :: restart
         integer, intent(out) :: ierr
 
-        integer :: i,id_extra
-
+        integer :: i,id_extra, revfile
+        character(len=256) :: command, rev
+        
         type (star_info), pointer :: s
         ierr = 0
+        revfile = 41
+        
         call star_ptr(id, s, ierr)
         if (ierr /= 0) return
         extras_startup = 0
@@ -102,6 +105,23 @@
            call unpack_extra_info(s)
         end if
 
+        ! Set up global parameters if needed
+        if (len_trim(hdf5_modname) == 0) then
+           hdf5_modname = 'HDF5'
+        end if
+
+!        if (len_trim(hdf5_codev) == 0) then
+        if (1 == 1) then
+           command = 'svn info --show-item revision > rev.txt'
+           call system(command)
+           open(unit=revfile, file='rev.txt', status="replace")
+           write(revfile, *) rev
+           !print "rev", rev
+           hdf5_codev = "mesa rev "//rev(1:len_trim(rev))
+        end if
+        
+           
+        
         ! Create HDF5 folder
         call system("mkdir -p "//hdf5_modname)
 
