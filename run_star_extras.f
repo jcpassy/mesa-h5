@@ -35,6 +35,9 @@
       
       include 'mesa_hdf5_params.inc'
 
+      character(len=*), parameter :: format_file  = "(I7.7)"
+      character(len=*), parameter :: format_cycle = "(I10)"
+
       integer :: num_history_columns, num_profile_columns
       character (len=maxlen_profile_column_name), pointer :: profile_names(:) ! num_profiles_columns
       double precision, pointer :: profile_vals(:,:) ! (nz,num_profile_columns)
@@ -89,10 +92,14 @@
         logical, intent(in) :: restart
         integer, intent(out) :: ierr
 
-        integer :: i,id_extra
+        integer :: i,id_extra, revfile
+        character(len=256) :: command, rev, mass_str, met_str, tmp_str
+        double precision :: mass_f
 
         type (star_info), pointer :: s
         ierr = 0
+        revfile = 41
+        
         call star_ptr(id, s, ierr)
         if (ierr /= 0) return
         extras_startup = 0
@@ -100,6 +107,31 @@
            call alloc_extra_info(s)
         else ! it is a restart
            call unpack_extra_info(s)
+        end if
+
+        ! Set up global  parameters if needed
+        ! hdf5_codev
+        if (len_trim(hdf5_codev) == 0) then
+           command = 'svn info '//mesa_dir(1:len_trim(mesa_dir))//' --show-item revision > rev.txt'
+           ! Tidious way to get the revision number
+           call system(command)
+           open(unit=revfile, file='rev.txt', status="old")
+           read(revfile,*,iostat=ierr) rev
+           hdf5_codev = "mesa rev "//rev(1:len_trim(rev))
+           close(revfile)
+           call system('rm rev.txt')
+        end if
+        
+        ! hdf5_prefix
+        if (len_trim(hdf5_prefix) == 0) then
+           ! These formats are REALLY such a pain...
+           ! May be there is a better way to do it?
+           write(mass_str,"(1pd26.5)") s% initial_mass
+           call str_to_double(mass_str, mass_f, ierr)
+           write(mass_str,"(f10.5)") mass_f
+           write(met_str, "(f4.3)") s% initial_z
+           tmp_str = "M"//mass_str(1:len_trim(mass_str))//"Z0"//met_str(1:len_trim(met_str))
+           call remove_white_spaces(tmp_str, hdf5_prefix)
         end if
 
         ! Create HDF5 folder

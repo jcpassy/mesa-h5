@@ -184,8 +184,6 @@
         call add_attribute_int(file_id, 1, "firstcycle", value_int)
 	call scalar_to_rank1_int(utils_OMP_GET_MAX_THREADS(), value_int)		
 	call add_attribute_int(file_id, 1, "OMP_NUM_THREADS", value_int)
-	call scalar_to_rank1_int(version_number, value_int)		
-	call add_attribute_int(file_id, 1, "MESA_version", value_int)
 
         ! Add character attributes
         call scalar_to_rank1_chr(codev, value_chr)
@@ -193,7 +191,7 @@
         call scalar_to_rank1_chr(modname, value_chr)
         call add_attribute_chr(file_id, 1, "modname", value_chr)
 	call scalar_to_rank1_chr(mesa_dir, value_chr)	
-	call add_attribute_chr(file_id, 1, "MESA_dir", value_chr)
+	call add_attribute_chr(file_id, 1, "MESA_DIR", value_chr)
 
         ! HDF5 version
         call h5get_libversion_f(majnum, minnum, relnum, error)
@@ -739,6 +737,34 @@
              i2.2, ':', i2.2, ':', i2.2 )
 
       end subroutine when
+
+
+!======================================================================================================================!
+
+      
+      subroutine remove_white_spaces(string1, string2)
+   
+        character(len=256), intent(in) :: string1
+        character(len=256), intent(out) :: string2
+
+        integer :: string_len 
+        integer :: i1, i2
+
+        string_len = len_trim(string1)
+        i1 = 1
+        i2 = 1
+
+        do while (i1 <= string_len)
+           if (string1(i1:i1) /= ' ') then
+              string2(i2:i2) = string1(i1:i1)
+              i2 = i2 + 1
+           endif
+           i1 = i1 + 1
+        end do
+        
+        string2 = string2(1:i2)
+
+      end subroutine remove_white_spaces
 
 
 !======================================================================================================================!
