@@ -35,6 +35,9 @@
       
       include 'mesa_hdf5_params.inc'
 
+      character(len=*), parameter :: format_file  = "(I7.7)"
+      character(len=*), parameter :: format_cycle = "(I10)"
+
       integer :: num_history_columns, num_profile_columns
       character (len=maxlen_profile_column_name), pointer :: profile_names(:) ! num_profiles_columns
       double precision, pointer :: profile_vals(:,:) ! (nz,num_profile_columns)

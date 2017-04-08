@@ -29,9 +29,6 @@
       character(len=*), parameter :: dataset_cycle_name  = 'SE_DATASET'
       character(len=*), parameter :: dataset_cycle_name2 = 'ISO_MASSF'
 
-      character(len=*), parameter :: format_file  = "(I7.7)"
-      character(len=*), parameter :: format_cycle = "(I10)"
-
       integer, parameter :: hdf5_num_mod_output = 50
 
       logical, parameter :: change_names = .true.
