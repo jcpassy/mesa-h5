@@ -1,6 +1,12 @@
-!======================================================================================================================!
+!=============================================================================
+! This files contains the routines needed for writing HDF5 outputs.
+! Author: Jean-Claude Passy
+!=============================================================================
 
 
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+! Function called at the start of the MESA run.
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
       subroutine hdf5_startup(s, restart,                                    &
            hdf5_codev, hdf5_modname, hdf5_prefix, hdf5_num_mod_output,       &
            ierr)
@@ -21,9 +27,9 @@
       end subroutine hdf5_startup
 
 
-!======================================================================================================================!
-
-
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+! Function called at the end of a timestep.
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
       subroutine hdf5_finish_step(s, change_names,                              &
            hdf5_codev, hdf5_modname, hdf5_prefix, hdf5_num_mod_output,          &
            how_many_extra_history_columns, data_for_extra_history_columns,      &
@@ -87,9 +93,9 @@
       end subroutine hdf5_finish_step
 
 
-!======================================================================================================================!
-
-
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+! Function creating of a new HDF5 container.
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
       subroutine start_new_hdf5_output_file(s, hdf5_codev, hdf5_modname, hdf5_prefix, &
            hdf5_num_mod_output, model, ierr)
 
@@ -133,9 +139,9 @@
       end subroutine start_new_hdf5_output_file
 
 
-!======================================================================================================================!
-
-
+!!!!!!!!!!!1111!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+! Function writing the attributes of the HDF5 container.
+!!!!!!!!!!!!!!!1111!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
       subroutine hdf5_writefhead(file_id, s, model, codev, modname, ierr)
 
         type (star_info), pointer        :: s
@@ -273,9 +279,9 @@
       end subroutine hdf5_writefhead
 
 
-!======================================================================================================================!
-      
-
+!!!!!!!!!!!!!!!!!!!!!!!!!!!
+! Function writing a cycle.
+!!!!!!!!!!!!!!!!!!!!!!!!!!!
       subroutine hdf5_writecycle(file_id,s,icounthdf, change_names,            &
            history_names, history_vals, history_is_int, num_history_columns,   &
            profile_names, profile_vals, profile_is_int, num_profile_columns,   &
@@ -385,9 +391,9 @@
       end subroutine hdf5_writecycle        
 
 
-!======================================================================================================================!
-
-
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+! Function transforming an integer into scalar.
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
       subroutine scalar_to_rank1_int(scalar,rank1)
         integer, intent(in)                :: scalar ! Scalar to be transformed in an array
         integer, intent(out), dimension(1) :: rank1  ! Result
@@ -395,9 +401,9 @@
       end subroutine scalar_to_rank1_int
 
 
-!======================================================================================================================!
-
-
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+! Function transforming a float into scalar.
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
       subroutine scalar_to_rank1_dbl(scalar,rank1)
         double precision, intent(in)                :: scalar ! Scalar to be transformed in an array
         double precision, intent(out), dimension(1) :: rank1  ! Result        
@@ -405,9 +411,9 @@
       end subroutine scalar_to_rank1_dbl
 
 
-!======================================================================================================================!
-
-
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+! Function transforming a string into scalar.
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
       subroutine scalar_to_rank1_chr(scalar,rank1)
         character(len=80), intent(in)                :: scalar ! Scalar to be transformed in an array
         character(len=80), intent(out), dimension(1) :: rank1  ! Result
@@ -415,9 +421,9 @@
       end subroutine scalar_to_rank1_chr
 
 
-!======================================================================================================================!
-
-
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+! Function adding an integer attribute.
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
       subroutine add_attribute_int(target_id,size,name,value)
         
         integer(HID_T),    intent(in)        :: target_id      ! Target (file or group) identifier
@@ -453,9 +459,9 @@
       end subroutine add_attribute_int
 
 
-!======================================================================================================================!
-
-
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+! Function adding a float attribute.
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
       subroutine add_attribute_dbl(target_id,size,name,value)
 
         integer(HID_T),    intent(in)        :: target_id      ! Target (file or group) identifier
@@ -491,9 +497,9 @@
       end subroutine add_attribute_dbl
         
 
-!======================================================================================================================!
-
-
+!!!!!!!!!!!!!!!!!!!!!!!!!!1!!!!!!!!!!
+! Function adding a string attribute.
+!!!!!!!!!!!!!!!!!!!!!!!!!!!1!!!!!!!!!
       subroutine add_attribute_chr(target_id,size,name,value)
        
         integer(HID_T),    intent(in)        :: target_id      ! Target (file or group) identifier
@@ -532,9 +538,9 @@
       end subroutine add_attribute_chr
 
 
-!======================================================================================================================!
-
-      
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+! Function adding a dataset.
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!
       subroutine add_dataset(target_id, dset_name, n_points, &
            profile_is_int, profile_names, profile_vals, num_profile_columns)
         
@@ -657,9 +663,9 @@
       end subroutine add_dataset
 
 
-!======================================================================================================================!
-
-
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+! Function transforming an array of floats into an array of ints.
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
       subroutine array_double2int(array_dbl,n,array_int)
 
         integer, intent(in) :: n
@@ -677,9 +683,9 @@
       end subroutine array_double2int        
 
 
-!======================================================================================================================!
-
-
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+! Function renaming some fields in the history.
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
       subroutine change_history_names(str)
 
         ! Change the name of a cycle attribute
@@ -707,9 +713,9 @@
       end subroutine change_history_names
 
 
-!======================================================================================================================!
-
-
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+! Function renaming some fields in the profiles.
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
       subroutine change_profile_names(str)        
 
         ! Change the name of a cycle profile
@@ -721,9 +727,9 @@
       end subroutine change_profile_names
 
 
-!======================================================================================================================!
-
-        
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+! Function returning current time.
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
       subroutine when(time)
 
         character(len=80), intent(out) :: time
@@ -739,9 +745,9 @@
       end subroutine when
 
 
-!======================================================================================================================!
-
-      
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+! Function removing all white spaces from a string.
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
       subroutine remove_white_spaces(string1, string2)
    
         character(len=256), intent(in) :: string1
@@ -765,7 +771,3 @@
         string2 = string2(1:i2)
 
       end subroutine remove_white_spaces
-
-
-!======================================================================================================================!
-
