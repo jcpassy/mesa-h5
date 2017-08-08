@@ -62,7 +62,7 @@ LOAD_PGPLOT = `mesasdk_pgplot_link` -lz
 
 # step 5) do you want to use SE with mesa/star?
 
-# SE is now supported using run_star_extras.  contact Falk Herwg for info.
+# HDF5 outputs are now supported using run_star_extras.  contact Falk Herwg for info.
 LOAD_HDF5 = `mesasdk_hdf5_link`
 INCLUDE_HDF5 = -I${MESASDK_ROOT}/include
 
