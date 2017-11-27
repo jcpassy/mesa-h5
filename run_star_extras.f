@@ -112,7 +112,8 @@
         ! Set up global  parameters if needed
         ! hdf5_codev
         if (len_trim(hdf5_codev) == 0) then
-           command = 'svn info '//mesa_dir(1:len_trim(mesa_dir))//' --show-item revision > rev.txt'
+           command = 'svn info '//mesa_dir(1:len_trim(mesa_dir)) &
+           //' --show-item revision > rev.txt'
            ! Tidious way to get the revision number
            call system(command)
            open(unit=revfile, file='rev.txt', status="old")
@@ -128,9 +129,22 @@
            ! May be there is a better way to do it?
            write(mass_str,"(1pd26.5)") s% initial_mass
            call str_to_double(mass_str, mass_f, ierr)
-           write(mass_str,"(f10.5)") mass_f
-           write(met_str, "(f4.3)") s% initial_z
-           tmp_str = "M"//mass_str(1:len_trim(mass_str))//"Z0"//met_str(1:len_trim(met_str))
+           if (s% initial_mass < 10.0) then
+              write(mass_str,"(f4.2)") mass_f
+           else if (s% initial_mass < 100.0) then
+              write(mass_str,"(f4.1)") mass_f
+           else if (s% initial_mass < 1000.0) then
+              write(mass_str,"(f4.0)") mass_f
+           else
+              stop "run_star_extras: mesa_h5: automatic prefix &
+                    &generation fails for M>1000"
+           endif
+           if (s% initial_z < 0.001) then
+              write(met_str, "(es5.0e1)") s% initial_z
+           else
+              write(met_str, "(f5.3)") s% initial_z
+           endif
+           tmp_str = "M"//mass_str(1:len_trim(mass_str))//"Z"//met_str(1:len_trim(met_str))
            call remove_white_spaces(tmp_str, hdf5_prefix)
         end if
 
