@@ -47,7 +47,7 @@
       star_mass ! in Msun units
       !log_star_mass
       
-      !time_step ! timestep in years since previous model
+      time_step ! timestep in years since previous model
       !time_step_sec ! timestep in seconds since previous model
       log_dt ! log10 time_step in years
       !log_dt_sec ! log10 time_step in seconds
@@ -382,7 +382,7 @@
    
    ! conditions at or near the surface of the model (outer edge of outer cell)
    
-      luminosity ! luminosity in Lsun units
+      !luminosity ! luminosity in Lsun units
       log_L ! log10 luminosity in Lsun units
       log_R ! log10 radius in Rsun units
       radius ! Rsun
@@ -533,9 +533,9 @@
 
    ! log10 total luminosity for reaction categories (Lsun units)
       
-      pp
-      cno
-      tri_alfa
+      !pp
+      !cno
+      !tri_alfa
 !      burn_c
 !      burn_n
 !      burn_o
