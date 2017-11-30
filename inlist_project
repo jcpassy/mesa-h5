@@ -33,7 +33,7 @@
    
   ! starting specifications
       initial_mass = 3d0 ! in Msun units
-      initial_Z = 0.0
+      initial_Z = 0.02
       initial_Y = 0.25
    
    ! output to files and terminal
