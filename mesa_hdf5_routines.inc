@@ -114,7 +114,7 @@
 
         write(char_modname,format_file) model
         prefix=hdf5_modname(1:len_trim(hdf5_modname))//'/'//  &
-             hdf5_prefix(1:len_trim(hdf5_prefix))//'.'//char_modname(1:len_trim(char_modname))//'.h5'
+             hdf5_prefix(1:len_trim(hdf5_prefix))//'.'//char_modname(1:len_trim(char_modname))//'.se.h5'
         filename = prefix(1:len_trim(prefix))
 
         call h5open_f(ierr)
