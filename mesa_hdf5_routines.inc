@@ -312,6 +312,8 @@
         integer           :: number_of_species
         integer i,j,k
 
+	logical :: mask(num_profile_columns) ! for masking profile columns
+
 
         ierr = 0
 
@@ -353,33 +355,30 @@
            endif
         enddo
         
+        !call add_dataset(group_id, dataset_cycle_name, s% nz, &
+        !     profile_is_int, profile_names, profile_vals, num_profile_columns)
+
+	! -_- only add what is necessary to the HDF5 files for post-processing
+	!
+	! this is: dcoeff, delta_mass, temperature, radius, mass, rho
+	mask(:) = .false.
+	do i = 1, num_profile_columns
+	   select case(profile_names(i))
+	      case ("dcoeff","delta_mass","temperature","radius","mass","rho")
+	          mask(i) = .true. ! we need this column
+	      case default
+	          continue ! we don't need this column for post-processing
+	   end select
+	end do
+
         call add_dataset(group_id, dataset_cycle_name, s% nz, &
-             profile_is_int, profile_names, profile_vals, num_profile_columns)
-        
-        ! Now do iso_massf
+             profile_is_int(mask), profile_names(mask), profile_vals(:,mask), 6)
+
+	! -_- erase things for writing iso_massf - we don't need those for
+	! post-processing
+
         number_of_species = s% species
         
-        allocate(iso_massf(s% nz,number_of_species))
-        allocate(iso_is_int(number_of_species))
-        allocate(iso_names(number_of_species))
-
-        do i=1, number_of_species
-           iso_is_int(i) = .false.
-           write(iso_str,*) i
-           iso_names(i) = iso_str
-           k = s% net_iso(s% chem_id(i))
-           do j=1, s% nz
-              iso_massf(j,i) = s% xa(k,j)
-           enddo
-        enddo
-
-        call add_dataset(group_id, dataset_cycle_name2, s% nz, &
-             iso_is_int, iso_names, iso_massf, number_of_species)
-
-        deallocate(iso_massf)
-        deallocate(iso_is_int)
-        deallocate(iso_names)
-
         ! Close group
         call h5gclose_f(group_id, ierr)
         if (ierr /= 0) return
