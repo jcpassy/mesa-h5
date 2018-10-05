@@ -312,7 +312,11 @@
         integer           :: number_of_species
         integer i,j,k
 
-	logical :: mask(num_profile_columns) ! for masking profile columns
+        integer, allocatable :: mask(:) ! for masking profile columns
+        logical, allocatable :: mask_profile_is_int(mask)
+        character (len=maxlen_profile_column_name), allocatable :: &
+           mask_profile_names(:)
+        double precision, allocatable :: mask_profile_vals(:,:)
 
 
         ierr = 0
@@ -358,24 +362,40 @@
         !call add_dataset(group_id, dataset_cycle_name, s% nz, &
         !     profile_is_int, profile_names, profile_vals, num_profile_columns)
 
-	! -_- only add what is necessary to the HDF5 files for post-processing
-	!
-	! this is: dcoeff, delta_mass, temperature, radius, mass, rho
-	mask(:) = .false.
-	do i = 1, num_profile_columns
-	   select case(profile_names(i))
-	      case ("dcoeff","delta_mass","temperature","radius","mass","rho")
-	          mask(i) = .true. ! we need this column
-	      case default
-	          continue ! we don't need this column for post-processing
-	   end select
-	end do
+        ! -_- only add what is necessary to the HDF5 files for post-processing
+        !
+        ! this is (6 columns): dcoeff, delta_mass, temperature, radius, mass, rho
+        allocate( &
+           mask(6), &
+           mask_profile_names(6), &
+           mask_profile_is_int(6), &
+           mask_profile_vals(s% nz, 6) &
+           )
 
+        j = 0
+        do i = 1, num_profile_columns
+           select case(profile_names(i))
+              case ("dcoeff","delta_mass","temperature","radius","mass","rho")
+                 j += 1
+                 mask(j) = i ! we need this column
+              case default
+                 continue ! we don't need this column for post-processing
+           end select
+        end do
+
+        mask_profile_names  = profile_names(mask)
+        mask_profile_is_int = profile_is_int(mask)
+        mask_profile_vals   = profile_vals(:,mask)
+  
         call add_dataset(group_id, dataset_cycle_name, s% nz, &
-             profile_is_int(mask), profile_names(mask), profile_vals(:,mask), 6)
+           mask_profile_is_int, mask_profile_names, &
+           mask_profile_vals, 6)
 
-	! -_- erase things for writing iso_massf - we don't need those for
-	! post-processing
+        deallocate(mask, mask_profile_names, mask_profile_is_int, &
+           mask_profile_vals)
+  
+        ! -_- erase things for writing iso_massf - we don't need those for
+        ! post-processing
 
         number_of_species = s% species
         
