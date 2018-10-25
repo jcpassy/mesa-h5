@@ -10,7 +10,7 @@
       subroutine hdf5_startup(s, restart,                                    &
            hdf5_codev, hdf5_modname, hdf5_prefix, hdf5_num_mod_output,       &
            ierr)
-        
+
         type (star_info), pointer :: s
         logical, intent(in) :: restart
         character (len=256), intent(in) :: hdf5_codev, hdf5_modname, hdf5_prefix
@@ -37,7 +37,7 @@
            history_names, history_vals, history_is_int, num_history_columns,    &
            profile_names, profile_vals, profile_is_int, num_profile_columns,    &
            ierr)
-        
+
         type (star_info), pointer :: s
         logical, intent(in) :: change_names
         character (len=256), intent(in) :: hdf5_codev, hdf5_modname, hdf5_prefix
@@ -58,7 +58,7 @@
         end interface
 
         integer :: modini
-        
+
         ierr = 0
         modini = s% model_number
 
@@ -67,7 +67,7 @@
                 modini, ierr)
            if (ierr /= 0) return
         end if
-    
+
         ! initialize FORTRAN interface.
         call h5open_f(ierr)
         if (ierr /= 0) return
@@ -76,7 +76,7 @@
         call h5fopen_f(filename, H5F_ACC_RDWR_F, file_id, ierr)
         if (ierr /= 0) return
 
-        call hdf5_writecycle(file_id, s,s% model_number, change_names,            &
+        call hdf5_writecycle(file_id, s, s% model_number, change_names,           &
              history_names, history_vals, history_is_int, num_history_columns,    &
              profile_names, profile_vals, profile_is_int, num_profile_columns,    &
              ierr)
@@ -104,9 +104,9 @@
         integer, intent(in) :: hdf5_num_mod_output
         integer, intent(in) :: model
         integer, intent(out) :: ierr
-        
+
         character (len=80) :: char_modname
-    
+
         ierr = 0
 
         write(*,*) "initializing HDF5 output ..."
@@ -123,15 +123,15 @@
         ! Create a new file using default properties.
         call h5fcreate_f(filename, H5F_ACC_TRUNC_F, file_id, ierr)
         if (ierr /= 0) return
-        
+
         ! Write header
         call hdf5_writefhead(file_id, s, model, hdf5_codev, hdf5_modname, ierr)
         if (ierr /= 0) return
-    
+
         ! Terminate access to the file.
         call h5fclose_f(file_id, ierr)
         if (ierr /= 0) return
-    
+
         ! Close FORTRAN interface.
         call h5close_f(ierr)
         if (ierr /= 0) return
@@ -161,19 +161,19 @@
         integer, pointer                    :: isotoprint(:)
         logical, pointer                    :: is_integer(:)
         double precision, pointer           :: iso_charge(:), iso_mass(:), iso_meric_state(:)
-      
+
         integer i,majnum, minnum, relnum
         character(len=80) :: hdf5version,time
         character(len=16) :: mesaversion,format_hdf5
 
         ierr = 0
-    
+
         number_of_species = s% species
         allocate(isotoprint(number_of_species))
         allocate(iso_charge(number_of_species))
         allocate(iso_mass(number_of_species))
         allocate(iso_meric_state(number_of_species))
-        
+
         do i=1, number_of_species
            isotoprint(i) = s% chem_id(i)
            myiso = isotoprint(i)
@@ -181,14 +181,14 @@
            iso_mass(i)        = chem_isos% Z_plus_N(myiso)
            iso_meric_state(i) = 1
         end do
-        
+
         !! ATTRIBUTES
         ! Add integer attributes
         call scalar_to_rank1_int(hdf5_num_mod_output, value_int)
         call add_attribute_int(file_id, 1, "icyclenb", value_int)
         call scalar_to_rank1_int(model, value_int)
         call add_attribute_int(file_id, 1, "firstcycle", value_int)
-	call scalar_to_rank1_int(utils_OMP_GET_MAX_THREADS(), value_int)		
+	call scalar_to_rank1_int(utils_OMP_GET_MAX_THREADS(), value_int)
 	call add_attribute_int(file_id, 1, "OMP_NUM_THREADS", value_int)
 
         ! Add character attributes
@@ -196,7 +196,7 @@
         call add_attribute_chr(file_id, 1, "codev", value_chr)
         call scalar_to_rank1_chr(modname, value_chr)
         call add_attribute_chr(file_id, 1, "modname", value_chr)
-	call scalar_to_rank1_chr(mesa_dir, value_chr)	
+	call scalar_to_rank1_chr(mesa_dir, value_chr)
 	call add_attribute_chr(file_id, 1, "MESA_DIR", value_chr)
 
         ! HDF5 version
@@ -237,7 +237,7 @@
         call add_attribute_dbl(file_id, 1, "temperature_unit", value_dbl)
         call scalar_to_rank1_dbl(1.d0, value_dbl)
         call add_attribute_dbl(file_id, 1, "dcoeff_unit", value_dbl)
-        
+
         !! DATASETS
         allocate(is_integer(1))
         allocate(prof_name(1))
@@ -251,7 +251,7 @@
         enddo
         call add_dataset(file_id, "isomeric_state", number_of_species, &
              is_integer, prof_name, prof_vals, 1)
-        
+
         ! A (double)
         is_integer = .false.
         do i=1,number_of_species
@@ -259,7 +259,7 @@
         enddo
         call add_dataset(file_id, "A", number_of_species, &
              is_integer, prof_name, prof_vals, 1)
-        
+
         ! Z (double)
         is_integer = .false.
         do i=1,number_of_species
@@ -267,7 +267,7 @@
         enddo
         call add_dataset(file_id, "Z", number_of_species, &
              is_integer, prof_name, prof_vals, 1)
-        
+
         deallocate(is_integer)
         deallocate(prof_name)
         deallocate(prof_vals)
@@ -275,7 +275,7 @@
         deallocate(iso_charge)
         deallocate(iso_mass)
         deallocate(iso_meric_state)
-        
+
       end subroutine hdf5_writefhead
 
 
@@ -286,7 +286,7 @@
            history_names, history_vals, history_is_int, num_history_columns,   &
            profile_names, profile_vals, profile_is_int, num_profile_columns,   &
            ierr)
-        
+
         type (star_info), pointer       :: s
         integer, intent(in)             :: icounthdf        ! Model number
         integer(HID_T), intent(in)      :: file_id          ! File identifier
@@ -305,7 +305,7 @@
         logical, pointer :: iso_is_int(:) ! true if the values in the profile column are integers
         double precision, pointer :: iso_massf(:,:) !(nz, number_of_species)
         character(len=80) :: iso_str
-        
+
         character(len=80)               :: groupname        ! Group name
         integer(HID_T)                  :: group_id         ! Group identifier
         character(len=80)               :: str_cycle        ! Cycle in string format
@@ -322,7 +322,7 @@
         ! Name of the group (cycle)
         write(str_cycle,format_cycle) icounthdf
         groupname = head_cycle_name//str_cycle
-        
+
         ! Replace blanks with zeros
         str_len_cycle = len_trim(groupname)
         do i=1, str_len_cycle
@@ -330,7 +330,7 @@
               groupname(i:i) = '0'
            endif
         enddo
-        
+
         call h5gcreate_f(file_id, groupname, group_id, ierr)
         if (ierr /= 0) return
 
@@ -339,7 +339,7 @@
            if (change_names) then
               call change_history_names(history_names(i))
            endif
-           
+
            if (history_is_int(i)) then
               call scalar_to_rank1_int(int(history_vals(i)), value_int)
               call add_attribute_int(group_id, 1, history_names(i), value_int)
@@ -348,7 +348,7 @@
               call add_attribute_dbl(group_id, 1, history_names(i), value_dbl)
            endif
         enddo
-        
+
         ! Add dataset
         ! First do SE_DATASET
         do i=1, num_profile_columns
@@ -356,13 +356,13 @@
               call change_profile_names(profile_names(i))
            endif
         enddo
-        
+
         call add_dataset(group_id, dataset_cycle_name, s% nz, &
              profile_is_int, profile_names, profile_vals, num_profile_columns)
-        
+
         ! Now do iso_massf
         number_of_species = s% species
-        
+
         allocate(iso_massf(s% nz,number_of_species))
         allocate(iso_is_int(number_of_species))
         allocate(iso_names(number_of_species))
@@ -388,7 +388,7 @@
         call h5gclose_f(group_id, ierr)
         if (ierr /= 0) return
 
-      end subroutine hdf5_writecycle        
+      end subroutine hdf5_writecycle
 
 
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
@@ -406,7 +406,7 @@
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
       subroutine scalar_to_rank1_dbl(scalar,rank1)
         double precision, intent(in)                :: scalar ! Scalar to be transformed in an array
-        double precision, intent(out), dimension(1) :: rank1  ! Result        
+        double precision, intent(out), dimension(1) :: rank1  ! Result
         rank1(1) = scalar
       end subroutine scalar_to_rank1_dbl
 
@@ -425,7 +425,7 @@
 ! Function adding an integer attribute.
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
       subroutine add_attribute_int(target_id,size,name,value)
-        
+
         integer(HID_T),    intent(in)        :: target_id      ! Target (file or group) identifier
         integer,           intent(in)        :: size           ! Attribute size
         character(len=*),  intent(in)        :: name           ! Attribute name
@@ -443,16 +443,16 @@
 
         ! Create datatype for the attribute.
         call h5tcopy_f(H5T_NATIVE_integer, type_id, error)
-        
+
         ! Create dataset attribute.
         call h5acreate_f(target_id, name, type_id, space_id, id, error)
-        
+
         ! Write the attribute data.
         call h5awrite_f(id, type_id, value, dims, error)
-        
+
         ! Close the attribute.
         call h5aclose_f(id, error)
-        
+
         ! Terminate access to the data space.
         call h5sclose_f(space_id, error)
 
@@ -493,48 +493,48 @@
 
         ! Terminate access to the data space.
         call h5sclose_f(space_id, error)
-        
+
       end subroutine add_attribute_dbl
-        
+
 
 !!!!!!!!!!!!!!!!!!!!!!!!!!1!!!!!!!!!!
 ! Function adding a string attribute.
 !!!!!!!!!!!!!!!!!!!!!!!!!!!1!!!!!!!!!
       subroutine add_attribute_chr(target_id,size,name,value)
-       
+
         integer(HID_T),    intent(in)        :: target_id      ! Target (file or group) identifier
         integer,           intent(in)        :: size           ! Attribute size
         character(len=*),  intent(in)        :: name           ! Attribute name
         character(len=*),  intent(in), dimension(size) :: value          ! Attribute value
-        
+
         integer                              :: rank = 1       ! Attribure rank
         integer(HSIZE_T), dimension(1)       :: dims = (/1/)   ! Attribute dimension
         integer(HID_T)                       :: space_id       ! Attribute Dataspace identifier
         integer(HID_T)                       :: type_id        ! Attribute Dataspace identifier
         integer(HID_T)                       :: id             ! Attribute identifier
-        
+
         integer(SIZE_T), PARAMETER           :: len = 80       ! length of the attribute
-        
+
         dims(1) = size
         ! Create scalar data space for the attribute.
         call h5screate_simple_f(rank, dims, space_id, error)
-        
+
         ! Create datatype for the attribute.
         call h5tcopy_f(H5T_NATIVE_character, type_id, error)
         call h5tset_size_f(type_id, len, error)
-        
+
         ! Create dataset attribute.
         call h5acreate_f(target_id, name, type_id, space_id, id, error)
-        
+
         ! Write the attribute data.
         call h5awrite_f(id, type_id, value, dims, error)
-        
+
         ! Close the attribute.
         call h5aclose_f(id, error)
-        
+
        ! Terminate access to the data space.
         call h5sclose_f(space_id, error)
-        
+
       end subroutine add_attribute_chr
 
 
@@ -543,11 +543,11 @@
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!
       subroutine add_dataset(target_id, dset_name, n_points, &
            profile_is_int, profile_names, profile_vals, num_profile_columns)
-        
+
         integer(HID_T),    intent(in) :: target_id        ! Target (file or group) identifier
         character(len=*),  intent(in) :: dset_name        ! Dataset name
         integer,           intent(in) :: n_points         ! Number of mesh points (size of the dataset)
-        
+
         character (len=maxlen_profile_column_name), intent(in), pointer :: profile_names(:) ! num_profiles_columns
         double precision, intent(in), pointer :: profile_vals(:,:) ! (nz,num_profile_columns)
         logical, intent(in), pointer :: profile_is_int(:) ! true if the values in the profile column are integers
@@ -573,7 +573,7 @@
 
         integer(HSIZE_T), dimension(1) :: dims
         integer(HSIZE_T), dimension(1) :: data_dims
-        
+
         integer :: i
 
         ! initialization
@@ -596,7 +596,7 @@
            endif
            type_size_total = type_size_total + profile_size(i)
         enddo
-        
+
         ! Dims
         dims(1) = n_points
         data_dims(1) = n_points
@@ -636,7 +636,7 @@
               call h5tinsert_f(profile_id(i), profile_names(i), offset, H5T_NATIVE_DOUBLE, error)
            endif
         enddo
-    
+
         ! Write data by fields in the datatype. Fields order is not important.
         ! integers
         do i=1, num_profile_columns
@@ -650,10 +650,10 @@
 
         ! End access to the dataset and release resources used by it.
         call h5dclose_f(id, error)
-        
+
         ! Terminate access to the data space.
         call h5sclose_f(space_id, error)
-        
+
         ! Terminate access to the datatype
         call h5tclose_f(type_id, error)
         do i=1, num_profile_columns
@@ -672,15 +672,15 @@
         double precision, intent(in), dimension(n) :: array_dbl
         integer, intent(out), pointer :: array_int(:)
         integer :: i
-        
+
         nullify(array_int)
         allocate(array_int(n))
 
         do i=1, n
            array_int(i) = int(array_dbl(i))
         enddo
-        
-      end subroutine array_double2int        
+
+      end subroutine array_double2int
 
 
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
@@ -709,21 +709,21 @@
         if (str(1:len_trim(str)) .eq. 'log_Teff')      str = 'logTeff'
         if (str(1:len_trim(str)) .eq. 'num_zones')     str = 'shellnb'
         if (str(1:len_trim(str)) .eq. 'star_mass')     str = 'total_mass'
-        
+
       end subroutine change_history_names
 
 
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 ! Function renaming some fields in the profiles.
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-      subroutine change_profile_names(str)        
+      subroutine change_profile_names(str)
 
         ! Change the name of a cycle profile
 	! For instance, to change 'mixing_type' into 'convection_indicator':
         ! if (str(1:len_trim(str)) .eq. 'mixing_type ') str = 'convection_indicator'
 
         character(len=maxlen_profile_column_name) :: str
-        
+
       end subroutine change_profile_names
 
 
@@ -749,11 +749,11 @@
 ! Function removing all white spaces from a string.
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
       subroutine remove_white_spaces(string1, string2)
-   
+
         character(len=256), intent(in) :: string1
         character(len=256), intent(out) :: string2
 
-        integer :: string_len 
+        integer :: string_len
         integer :: i1, i2
 
         string_len = len_trim(string1)
@@ -767,7 +767,7 @@
            endif
            i1 = i1 + 1
         end do
-        
+
         string2 = string2(1:i2)
 
       end subroutine remove_white_spaces
