@@ -360,7 +360,7 @@
    z ! metallicity
    !log_z ! metallicity
 
-   add_abundances ! this adds all of the isos that are in the current net
+   !add_abundances ! this adds all of the isos that are in the current net
    ! NOTE: you can list specific isotopes by giving their names (from chem_def)
       
       !h1
