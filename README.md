@@ -48,4 +48,4 @@ Copyright (c) 2014 - 2018, NuGrid Team. All rights reserved.
 License
 -------
 
-BSD-3-Clause
+BSD-3-Clause (see LICENSE.md)
