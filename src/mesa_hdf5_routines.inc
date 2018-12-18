@@ -114,7 +114,7 @@
 
         write(char_modname,format_file) model
         prefix=hdf5_modname(1:len_trim(hdf5_modname))//'/'//  &
-             hdf5_prefix(1:len_trim(hdf5_prefix))//'.'//char_modname(1:len_trim(char_modname))//'.h5'
+             hdf5_prefix(1:len_trim(hdf5_prefix))//'.'//char_modname(1:len_trim(char_modname))//'.se.h5'
         filename = prefix(1:len_trim(prefix))
 
         call h5open_f(ierr)
@@ -208,6 +208,10 @@
         write(hdf5version,format_hdf5) majnum,'.',minnum,'.',relnum
         call scalar_to_rank1_chr(hdf5version, value_chr)
         call add_attribute_chr(file_id, 1, "HDF5_version", value_chr)
+
+	! SE version (*** Pavel ***)
+        value_chr = "1.2"
+        call add_attribute_chr(file_id, 1, "SE_version", value_chr)
 
         ! Time
         call when(time)
