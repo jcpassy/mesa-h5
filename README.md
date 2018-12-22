@@ -34,11 +34,14 @@ Testing
 
 If you would like to run an example, you can use the inlist and columns files located in the ``test`` folder.
 
-Known issues
-------------
-You can use the `nugridpy.nugridse` module to work with the mesa_h5 hdf5 output files. Here are some notes:
-* if the simulation has been stopped the last file may be corrupted and you may get some error when trying to extract or access data in that file. Just delete that last corrputed file and remove the h5Preproc.txt file and reinitialize the instance.
+Known issues and tips
+---------------------
 
+You can use the `nugridpy.nugridse` module to work with the mesa_h5 hdf5 output files. Here are some notes:
+
+* if the simulation has been stopped the last file may be corrupted and you may get some error when trying to extract or access data in that file. Just delete that last corrputed file and remove the h5Preproc.txt file and reinitialize the instance.
+* when you first initiate a `nugridpy.nugridse` instance and the `h5Preproc.txt` is made for the first time you may have to do it again to get a correct instance (we have seen multiple enties per cycle, and this is looked into, but has this reliable workaround).
+* it is advisable to include `photo_interval = 100` in your inlist controls and add use in `src/mesa_hdf5_params.inc` the same value for `integer, parameter :: hdf5_num_mod_output = 100`
 
 
 Authors
