@@ -118,7 +118,7 @@
            call unpack_extra_info(s)
         end if
 
-        ! Set up global  parameters if needed
+        ! Set up global parameters if needed
         ! hdf5_codev
         if (len_trim(hdf5_codev) == 0) then
            command = 'svn info '//mesa_dir(1:len_trim(mesa_dir))//' --show-item revision > rev.txt'
@@ -147,10 +147,19 @@
         call system("mkdir -p "//hdf5_modname)
 
         ! Get names and values for history
-        ! They will be part of the star_data structure)
-        ! s% history_names, s% history_values,s% history_value_is_integer
         call get_data_for_history_columns(s, id_extra, ierr)
         num_history_columns = s% number_of_history_columns
+
+        ! Get names and values for profiles
+        num_profile_columns_logs = num_standard_profile_columns(s) + how_many_extra_profile_columns(id, id_extra)
+        allocate(                                               &
+             profile_names_logs(num_profile_columns_logs),      &
+             profile_vals_logs(s% nz,num_profile_columns_logs), &
+             profile_is_int_logs(num_profile_columns_logs),     &
+             stat=ierr)
+
+        call get_data_for_profile_columns(s, id_extra, s% nz, &
+         profile_names_logs, profile_vals_logs, profile_is_int_logs,ierr)
 
         ! Parse the hdf5_profile_columns.list and save names
         open(41, file="hdf5_profile_columns.list", iostat=ios, status='old')
@@ -199,6 +208,7 @@
         if (failed('hdf5_startup', ierr)) return
 
         ! Deallocate
+        deallocate(profile_names_logs, profile_vals_logs, profile_is_int_logs)
         deallocate(profile_names, profile_vals, profile_is_int)
 
 

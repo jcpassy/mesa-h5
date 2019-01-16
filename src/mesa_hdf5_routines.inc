@@ -21,7 +21,7 @@
         firstmodel = s% model_number + 1
 
         call start_new_hdf5_output_file(s, hdf5_codev, hdf5_modname, hdf5_prefix, hdf5_num_mod_output, &
-             firstmodel,ierr)
+            firstmodel,ierr)
         if (ierr /= 0) return
 
       end subroutine hdf5_startup
