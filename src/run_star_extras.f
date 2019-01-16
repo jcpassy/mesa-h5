@@ -9,7 +9,7 @@
 !   by the free software foundation; either version 2 of the license, or
 !   (at your option) any later version.
 !
-!   mesa is distributed in the hope that it will be useful, 
+!   mesa is distributed in the hope that it will be useful,
 !   but without any warranty; without even the implied warranty of
 !   merchantability or fitness for a particular purpose.  see the
 !   gnu library general public license for more details.
@@ -19,7 +19,7 @@
 !   foundation, inc., 59 temple place, suite 330, boston, ma 02111-1307 usa
 !
 ! ***********************************************************************
- 
+
       module run_star_extras
 
       use star_lib
@@ -32,7 +32,7 @@
       use HDF5
 
       implicit none
-      
+
       include 'mesa_hdf5_params.inc'
 
       character(len=*), parameter :: format_file  = "(I7.7)"
@@ -42,6 +42,12 @@
       character (len=maxlen_profile_column_name), pointer :: profile_names(:) ! num_profiles_columns
       double precision, pointer :: profile_vals(:,:) ! (nz,num_profile_columns)
       logical, pointer :: profile_is_int(:) ! true if the values in the profile column are integers
+
+      ! These variables are just for the logs to check the profile names for the HDF5 file
+      integer :: num_profile_columns_logs
+      character (len=maxlen_profile_column_name), pointer :: profile_names_logs(:) ! num_profiles_columns_logs
+      double precision, pointer :: profile_vals_logs(:,:) ! (nz,num_profile_columns)
+      logical, pointer :: profile_is_int_logs(:) ! true if the values in the profile column are integers
 
       character(len=256) :: filename, prefix
       integer(HID_T)     :: file_id                   ! File identifier
@@ -53,7 +59,7 @@
 
       ! HDF5 subroutines
       include 'mesa_hdf5_routines.inc'
-            
+
       subroutine extras_controls(id, ierr)
         integer, intent(in) :: id
         integer, intent(out) :: ierr
@@ -61,10 +67,10 @@
         ierr = 0
         call star_ptr(id, s, ierr)
         if (ierr /= 0) return
-        
+
         ! this is the place to set any procedure pointers you want to change
         ! e.g., other_wind, other_mixing, other_energy  (see star_data.inc)
-        
+
         ! Uncomment these lines if you wish to use the functions in this file,
         ! otherwise we use a null_ version which does nothing.
         s% extras_startup => extras_startup
@@ -74,19 +80,19 @@
         s% how_many_extra_history_columns => how_many_extra_history_columns
         s% data_for_extra_history_columns => data_for_extra_history_columns
         s% how_many_extra_profile_columns => how_many_extra_profile_columns
-        s% data_for_extra_profile_columns => data_for_extra_profile_columns  
+        s% data_for_extra_profile_columns => data_for_extra_profile_columns
 
         ! Once you have set the function pointers you want,
         ! then uncomment this (or set it in your star_job inlist)
         ! to disable the printed warning message,
-        s% job% warn_run_star_extras =.false.       
-            
+        s% job% warn_run_star_extras =.false.
+
       end subroutine extras_controls
-      
+
       ! None of the following functions are called unless you set their
       ! function point in extras_control.
-     
-      
+
+
       integer function extras_startup(id, restart, ierr)
         integer, intent(in) :: id
         logical, intent(in) :: restart
@@ -96,10 +102,13 @@
         character(len=256) :: command, rev, mass_str, met_str, tmp_str
         double precision :: mass_f
 
+        integer :: ios, line
+        character(len=100) :: buffer
+
         type (star_info), pointer :: s
         ierr = 0
         revfile = 41
-        
+
         call star_ptr(id, s, ierr)
         if (ierr /= 0) return
         extras_startup = 0
@@ -121,7 +130,7 @@
            close(revfile)
            call system('rm rev.txt')
         end if
-        
+
         ! hdf5_prefix
         if (len_trim(hdf5_prefix) == 0) then
            ! These formats are REALLY such a pain...
@@ -137,49 +146,52 @@
         ! Create HDF5 folder
         call system("mkdir -p "//hdf5_modname)
 
-        ! Get names and values for history 
+        ! Get names and values for history
         ! They will be part of the star_data structure)
         ! s% history_names, s% history_values,s% history_value_is_integer
         call get_data_for_history_columns(s, id_extra, ierr)
         num_history_columns = s% number_of_history_columns
 
-        ! Get names and values for profiles
-        num_profile_columns = num_standard_profile_columns(s) + how_many_extra_profile_\
-columns(id, id_extra)
+        ! Parse the hdf5_profile_columns.list and save names
+        open(41, file="hdf5_profile_columns.list", iostat=ios, status='old')
+        line = 0
+        ! Read once to get number of lines
+        do while (ios == 0)
+          read(41, '(A)', iostat=ios) buffer
+          if (ios == 0) then
+            line = line + 1
+          end if
+        end do
+        close(41)
+        num_profile_columns = line
 
-        ! Allocate memory
+        ! Second time to extract profiles
         allocate(                                     &
              profile_names(num_profile_columns),      &
              profile_vals(s% nz,num_profile_columns), &
              profile_is_int(num_profile_columns),     &
              stat=ierr)
-        call get_data_for_profile_columns(s, id_extra, s% nz, &
-             profile_names, profile_vals, profile_is_int, ierr)
-        
+        open(41, file="hdf5_profile_columns.list", iostat=ios, status='old')
+        line = 0
+        do while (ios == 0)
+          read(41, '(A)', iostat=ios) buffer
+          if (ios == 0) then
+            line = line + 1
+            profile_names(line) = buffer
+          end if
+        end do
+        close(41)
 
-        ! test
-        if (.false.) then
+        ! Compare names
+        do line = 1, num_profile_columns
+          if (.not. (any(profile_names_logs == profile_names(line)))) then
+            write(*,*) 'Error: the following profile has not been not found in profiles list:'
+            write(*,*) profile_names(line)
+            ierr = 41
+            return
+          end if
+        end do
 
-           write(*,*) '################################'
-           write(*,*) '################################'
-           write(*,*) 'History list:'
-
-           do i=1, num_history_columns
-              write(*,*) s% history_names(i), s% history_values(i),s% history_value_is_integer(i)
-           end do
-        
-           write(*,*) '################################'
-           write(*,*) 'Profiles list'
-
-           do i=1,num_profile_columns
-              write(*,*) profile_names(i), profile_vals(1,i), profile_is_int(i)
-           end do
-
-           write(*,*) '################################'
-           write(*,*) '################################'
-
-        end if
-        
         ! Call HDF5 routine
         call hdf5_startup(s, restart,                                          &
              hdf5_codev, hdf5_modname, hdf5_prefix, hdf5_num_mod_output,       &
@@ -191,7 +203,7 @@ columns(id, id_extra)
 
 
       end function extras_startup
-      
+
 
       ! returns either keep_going, retry, backup, or terminate.
       integer function extras_check_model(id, id_extra)
@@ -201,7 +213,7 @@ columns(id, id_extra)
         ierr = 0
         call star_ptr(id, s, ierr)
         if (ierr /= 0) return
-        extras_check_model = keep_going         
+        extras_check_model = keep_going
         if (.false. .and. s% star_mass_h1 < 0.35d0) then
            ! stop when star hydrogen mass drops to specified level
            extras_check_model = terminate
@@ -209,7 +221,7 @@ columns(id, id_extra)
            return
         end if
 
-        
+
         ! if you want to check multiple conditions, it can be useful
         ! to set a different termination code depending on which
         ! condition was triggered.  MESA provides 9 customizeable
@@ -217,7 +229,7 @@ columns(id, id_extra)
         ! customize the messages that will be printed upon exit by
         ! setting the corresponding termination_code_str value.
         ! termination_code_str(t_xtra1) = 'my termination condition'
-        
+
         ! by default, indicate where (in the code) MESA terminated
         if (extras_check_model == terminate) s% termination_code = t_extras_check_model
       end function extras_check_model
@@ -232,8 +244,8 @@ columns(id, id_extra)
         if (ierr /= 0) return
         how_many_extra_history_columns = 2
       end function how_many_extra_history_columns
-      
-      
+
+
       subroutine data_for_extra_history_columns(id, id_extra, n, names, vals, ierr)
         integer, intent(in) :: id, id_extra, n
         character (len=maxlen_history_column_name) :: names(n)
@@ -243,7 +255,7 @@ columns(id, id_extra)
         ierr = 0
         call star_ptr(id, s, ierr)
         if (ierr /= 0) return
-         
+
         !note: do NOT add the extras names to history_columns.list
         ! the history_columns.list is only for the built-in log column options.
         ! it must not include the new column names you are adding here.
@@ -256,7 +268,7 @@ columns(id, id_extra)
 
       end subroutine data_for_extra_history_columns
 
-      
+
       integer function how_many_extra_profile_columns(id, id_extra)
         use star_def, only: star_info
         integer, intent(in) :: id, id_extra
@@ -267,8 +279,8 @@ columns(id, id_extra)
         if (ierr /= 0) return
         how_many_extra_profile_columns = 3
       end function how_many_extra_profile_columns
-      
-      
+
+
       subroutine data_for_extra_profile_columns(id, id_extra, n, nz, names, vals, ierr)
         use star_def, only: star_info, maxlen_profile_column_name
         use const_def, only: dp
@@ -281,18 +293,18 @@ columns(id, id_extra)
         ierr = 0
         call star_ptr(id, s, ierr)
         if (ierr /= 0) return
-         
+
         !note: do NOT add the extra names to profile_columns.list
         ! the profile_columns.list is only for the built-in profile column options.
         ! it must not include the new column names you are adding here.
-        
+
         ! here is an example for adding a profile column
         !if (n /= 1) stop 'data_for_extra_profile_columns'
         !names(1) = 'beta'
         !do k = 1, nz
         !   vals(k,1) = s% Pgas(k)/s% P(k)
         !end do
-         
+
         names(1) = 'delta_mass'
          names(2) = 'rho'
          names(3) = 'dcoeff'
@@ -303,7 +315,7 @@ columns(id, id_extra)
          end do
 
       end subroutine data_for_extra_profile_columns
-      
+
 
       ! returns either keep_going or terminate.
       ! note: cannot request retry or backup; extras_check_model can do that.
@@ -317,7 +329,7 @@ columns(id, id_extra)
         extras_finish_step = keep_going
         call store_extra_info(s)
 
-        ! to save a profile, 
+        ! to save a profile,
            ! s% need_to_save_profiles_now = .true.
         ! to update the star log,
            ! s% need_to_update_history_now = .true.
@@ -348,7 +360,7 @@ columns(id, id_extra)
              profile_names, profile_vals, profile_is_int, num_profile_columns,                       &
              ierr)
         if (failed('hdf5_finish_step', ierr)) return
-        
+
         ! Deallocate
         deallocate(profile_names, profile_vals, profile_is_int)
 
@@ -356,8 +368,8 @@ columns(id, id_extra)
         ! by default, indicate where (in the code) MESA terminated
         if (extras_finish_step == terminate) s% termination_code = t_extras_finish_step
       end function extras_finish_step
-      
-      
+
+
       subroutine extras_after_evolve(id, id_extra, ierr)
         integer, intent(in) :: id, id_extra
         integer, intent(out) :: ierr
@@ -367,58 +379,58 @@ columns(id, id_extra)
         if (ierr /= 0) return
 
       end subroutine extras_after_evolve
-      
-      
+
+
       ! routines for saving and restoring extra data so can do restarts
-      
+
          ! put these defs at the top and delete from the following routines
          !integer, parameter :: extra_info_alloc = 1
          !integer, parameter :: extra_info_get = 2
          !integer, parameter :: extra_info_put = 3
-      
-      
+
+
       subroutine alloc_extra_info(s)
         integer, parameter :: extra_info_alloc = 1
         type (star_info), pointer :: s
         call move_extra_info(s,extra_info_alloc)
       end subroutine alloc_extra_info
-      
-      
+
+
       subroutine unpack_extra_info(s)
         integer, parameter :: extra_info_get = 2
         type (star_info), pointer :: s
         call move_extra_info(s,extra_info_get)
       end subroutine unpack_extra_info
-      
-      
+
+
       subroutine store_extra_info(s)
         integer, parameter :: extra_info_put = 3
         type (star_info), pointer :: s
         call move_extra_info(s,extra_info_put)
       end subroutine store_extra_info
-      
-      
+
+
       subroutine move_extra_info(s,op)
         integer, parameter :: extra_info_alloc = 1
         integer, parameter :: extra_info_get = 2
         integer, parameter :: extra_info_put = 3
         type (star_info), pointer :: s
         integer, intent(in) :: op
-        
+
         integer :: i, j, num_ints, num_dbls, ierr
-        
+
         i = 0
-        ! call move_int or move_flg    
+        ! call move_int or move_flg
         num_ints = i
-         
+
         i = 0
-        ! call move_dbl       
-         
+        ! call move_dbl
+
         num_dbls = i
-        
+
         if (op /= extra_info_alloc) return
         if (num_ints == 0 .and. num_dbls == 0) return
-        
+
         ierr = 0
         call star_alloc_extras(s% id, num_ints, num_dbls, ierr)
         if (ierr /= 0) then
@@ -427,9 +439,9 @@ columns(id, id_extra)
            write(*,*) 'alloc_extras num_dbls', num_dbls
            stop 1
         end if
-         
+
       contains
-         
+
         subroutine move_dbl(dbl)
           real(dp) :: dbl
           i = i+1
@@ -440,7 +452,7 @@ columns(id, id_extra)
              s% extra_work(i) = dbl
           end select
         end subroutine move_dbl
-        
+
         subroutine move_int(int)
           integer :: int
           i = i+1
@@ -451,7 +463,7 @@ columns(id, id_extra)
              s% extra_iwork(i) = int
           end select
         end subroutine move_int
-        
+
         subroutine move_flg(flg)
           logical :: flg
           i = i+1
@@ -466,7 +478,7 @@ columns(id, id_extra)
              end if
           end select
         end subroutine move_flg
-      
+
       end subroutine move_extra_info
-      
+
     end module run_star_extras

@@ -1,9 +1,8 @@
-The HDF5 framework for MESA
-===========================
+MESA_H5
+=======
 
 This is the new implementation of [HDF5](https://support.hdfgroup.org/HDF5/) support for MESA
 based on the former ``SE`` format. It provides ``mppnp`` compatibility.
-
 
 Requirements
 ------------
@@ -23,11 +22,11 @@ into the ``src`` folder in your work directory
 Customization
 -------------
 
-The ``mesa_hdf5_params.inc`` file contains the different setup parameters of the HDF5 outputs. You can modify them as you wish, but remember to clean and recompile for your changes to be applied. For example, for productions runs you will most likely set 
+The ``mesa_hdf5_params.inc`` file contains the different setup parameters of the HDF5 outputs. You can modify them as you wish, but remember to clean and recompile for your changes to be applied. For example, for productions runs you will most likely set
 ```
        integer, parameter :: hdf5_num_mod_output
 ```
-to a value of 100 or more depending on how long you will expect your run to be. Typically you would have 20-30 files per run. Putting 1000 cycles or time steps into one file is a practical number for longer runs. 
+to a value of 100 or more depending on how long you will expect your run to be. Typically you would have 20-30 files per run. Putting 1000 cycles or time steps into one file is a practical number for longer runs.
 
 Testing
 -------
@@ -49,7 +48,7 @@ Authors
 
 [Jean-Claude Passy](https://github.com/jcpassy)
 
-Falk Herwig
+[Falk Herwig](https://github.com/fherwig)
 
 Samuel Jones
 
