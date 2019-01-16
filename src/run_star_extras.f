@@ -270,12 +270,6 @@
         ! the history_columns.list is only for the built-in log column options.
         ! it must not include the new column names you are adding here.
 
-        names(1) = 'L_spec'
-        names(2) = 'diff_L'
-
-        vals(1) = ((s% Teff)**4.0 / s% grav(1)) / Lsun
-        vals(2) = vals(1) / (s% photosphere_L)
-
       end subroutine data_for_extra_history_columns
 
 
@@ -315,15 +309,6 @@
         !   vals(k,1) = s% Pgas(k)/s% P(k)
         !end do
 
-        names(1) = 'delta_mass'
-         names(2) = 'rho'
-         names(3) = 'dcoeff'
-         do k = 1, nz
-            vals(k,1) = s% mstar * s% dq(k) / msol
-            vals(k,2) = s% rho(k)
-            vals(k,3) = s% D_mix(k)
-         end do
-
       end subroutine data_for_extra_profile_columns
 
 
@@ -332,6 +317,9 @@
       integer function extras_finish_step(id, id_extra)
         integer, intent(in) :: id, id_extra
         integer :: ierr
+        integer :: ios, line
+        character(len=100) :: buffer
+
         type (star_info), pointer :: s
         ierr = 0
         call star_ptr(id, s, ierr)
@@ -349,19 +337,57 @@
         num_history_columns = s% number_of_history_columns
 
         ! Get names and values for profiles
-        num_profile_columns = num_standard_profile_columns(s) + how_many_extra_profile_\
-columns(id, id_extra)
+        num_profile_columns_logs = num_standard_profile_columns(s) + how_many_extra_profile_columns(id, id_extra)
+        allocate(                                               &
+             profile_names_logs(num_profile_columns_logs),      &
+             profile_vals_logs(s% nz,num_profile_columns_logs), &
+             profile_is_int_logs(num_profile_columns_logs),     &
+             stat=ierr)
 
-        ! Allocate memory
+        call get_data_for_profile_columns(s, id_extra, s% nz, &
+         profile_names_logs, profile_vals_logs, profile_is_int_logs,ierr)
+
+        ! Parse the hdf5_profile_columns.list and save names
+        open(41, file="hdf5_profile_columns.list", iostat=ios, status='old')
+        line = 0
+        ! Read once to get number of lines
+        do while (ios == 0)
+          read(41, '(A)', iostat=ios) buffer
+          if (ios == 0) then
+            line = line + 1
+          end if
+        end do
+        close(41)
+        num_profile_columns = line
+
+        ! Second time to extract profiles
         allocate(                                     &
              profile_names(num_profile_columns),      &
              profile_vals(s% nz,num_profile_columns), &
              profile_is_int(num_profile_columns),     &
              stat=ierr)
+        open(41, file="hdf5_profile_columns.list", iostat=ios, status='old')
+        line = 0
+        do while (ios == 0)
+          read(41, '(A)', iostat=ios) buffer
+          if (ios == 0) then
+            line = line + 1
+            profile_names(line) = buffer
+          end if
+        end do
+        close(41)
 
-        call get_data_for_profile_columns(s, id_extra, s% nz, &
-             profile_names, profile_vals, profile_is_int, ierr)
+        ! Compare names
+        do line = 1, num_profile_columns
+          if (.not. (any(profile_names_logs == profile_names(line)))) then
+            write(*,*) 'Error: the following profile has not been not found in profiles list:'
+            write(*,*) profile_names(line)
+            ierr = 41
+            return
+          end if
+        end do
 
+        ! Main function call
         call hdf5_finish_step(s, change_names,                                                       &
              hdf5_codev, hdf5_modname, hdf5_prefix, hdf5_num_mod_output,                             &
              how_many_extra_history_columns, data_for_extra_history_columns,                         &
@@ -369,10 +395,12 @@ columns(id, id_extra)
              s% history_names, s% history_values, s% history_value_is_integer, num_history_columns,  &
              profile_names, profile_vals, profile_is_int, num_profile_columns,                       &
              ierr)
-        if (failed('hdf5_finish_step', ierr)) return
 
         ! Deallocate
+        deallocate(profile_names_logs, profile_vals_logs, profile_is_int_logs)
         deallocate(profile_names, profile_vals, profile_is_int)
+
+        if (failed('hdf5_finish_step', ierr)) return
 
         ! see extras_check_model for information about custom termination codes
         ! by default, indicate where (in the code) MESA terminated
