@@ -162,7 +162,7 @@
          profile_names_logs, profile_vals_logs, profile_is_int_logs,ierr)
 
         ! Parse the hdf5_profile_columns.list and save names
-        open(41, file="hdf5_profile_columns.list", iostat=ios, status='old')
+        open(41, file=hdf5_profile_list, iostat=ios, status='old')
         line = 0
         ! Read once to get number of lines
         do while (ios == 0)

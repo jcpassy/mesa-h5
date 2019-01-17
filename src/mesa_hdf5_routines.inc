@@ -936,3 +936,43 @@
         string2 = string2(1:i2)
 
       end subroutine remove_white_spaces
+
+
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+! Function extracting the profile name from list.
+! It removes everything after the first exclamation mark found
+! and ajusts left and right for space
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+      subroutine extract_profile_name(string1, string2)
+
+         character(len=256), intent(in) :: string1
+         character(len=256), intent(out) :: string2
+
+         integer :: string_len
+         integer :: i1
+
+         string2 = adjustl(string1)
+         string_len = len_trim(string2)
+
+         write(*,*) 'string1 = ', string1
+         write(*,*) 'string2 = ', string2
+
+         if (string_len .eq. 0) then
+            string2 = ''
+         else
+            i1 = 0
+            do while (i1 <= string_len)
+               if (string2(i1:i1) .eq. '!') then
+                  goto 222
+               endif
+            end do
+
+   222      if (i1 .eq. 1) then
+               string2 = ''
+            else
+               string2 = string2(1:i1)
+               string2 = adjustr(string2)
+
+            endif
+         endif
+      end subroutine extract_profile_name
