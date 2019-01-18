@@ -939,7 +939,7 @@
 
 
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-! Function extracting the profile name from list.
+! Function extracting the profile name from a string.
 ! It removes everything after the first exclamation mark found
 ! and ajusts left and right for space
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
@@ -953,26 +953,21 @@
 
          string2 = adjustl(string1)
          string_len = len_trim(string2)
-
-         write(*,*) 'string1 = ', string1
-         write(*,*) 'string2 = ', string2
-
          if (string_len .eq. 0) then
             string2 = ''
          else
-            i1 = 0
+            i1 = 1
             do while (i1 <= string_len)
                if (string2(i1:i1) .eq. '!') then
                   goto 222
                endif
+               i1 = i1 + 1
             end do
 
    222      if (i1 .eq. 1) then
                string2 = ''
             else
-               string2 = string2(1:i1)
-               string2 = adjustr(string2)
-
+               string2 = string2(1:i1-1)
             endif
          endif
       end subroutine extract_profile_name

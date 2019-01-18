@@ -103,7 +103,7 @@
         double precision :: mass_f
 
         integer :: ios, line
-        character(len=100) :: buffer
+        character(len=256) :: buffer, name
 
         type (star_info), pointer :: s
         ierr = 0
@@ -167,12 +167,15 @@
         ! Read once to get number of lines
         do while (ios == 0)
           read(41, '(A)', iostat=ios) buffer
-          if (ios == 0) then
+          call extract_profile_name(buffer, name)
+          if ((ios == 0) .and. (len_trim(name) .gt. 0)) then
             line = line + 1
+            write(*,*) name(1:len_trim(name))
           end if
         end do
         close(41)
         num_profile_columns = line
+        write(*,*) 'num_profile_columns = ', num_profile_columns
 
         ! Second time to extract profiles
         allocate(                                     &
@@ -180,13 +183,14 @@
              profile_vals(s% nz,num_profile_columns), &
              profile_is_int(num_profile_columns),     &
              stat=ierr)
-        open(41, file="hdf5_profile_columns.list", iostat=ios, status='old')
+        open(41, file=hdf5_profile_list, iostat=ios, status='old')
         line = 0
         do while (ios == 0)
           read(41, '(A)', iostat=ios) buffer
-          if (ios == 0) then
+          call extract_profile_name(buffer, name)
+          if ((ios == 0) .and. (len_trim(name) .gt. 0)) then
             line = line + 1
-            profile_names(line) = buffer
+            profile_names(line) = name
           end if
         end do
         close(41)
