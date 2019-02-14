@@ -30,7 +30,7 @@
 &controls
 
    max_model_number = 301
-   
+   photo_interval = 100   
   ! starting specifications
       initial_mass = 3d0 ! in Msun units
       initial_Z = 0.02

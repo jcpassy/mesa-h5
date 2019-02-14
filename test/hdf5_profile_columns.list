@@ -1,0 +1,13 @@
+! hdf5_profile_columns.list -- determines the contents of the HDF5 files
+! NOTE: profile_columns.list MUST contains any standard MESA profile included here
+! NOTE 2: any extra profile column MUST also be included here
+
+dm
+radius
+rmid
+temperature
+log_D_mix
+mass
+delta_mass
+rho
+dcoeff

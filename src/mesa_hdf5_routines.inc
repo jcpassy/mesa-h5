@@ -21,7 +21,7 @@
         firstmodel = s% model_number + 1
 
         call start_new_hdf5_output_file(s, hdf5_codev, hdf5_modname, hdf5_prefix, hdf5_num_mod_output, &
-             firstmodel,ierr)
+            firstmodel,ierr)
         if (ierr /= 0) return
 
       end subroutine hdf5_startup
@@ -114,7 +114,7 @@
 
         write(char_modname,format_file) model
         prefix=hdf5_modname(1:len_trim(hdf5_modname))//'/'//  &
-             hdf5_prefix(1:len_trim(hdf5_prefix))//'.'//char_modname(1:len_trim(char_modname))//'.h5'
+             hdf5_prefix(1:len_trim(hdf5_prefix))//'.'//char_modname(1:len_trim(char_modname))//'.se.h5'
         filename = prefix(1:len_trim(prefix))
 
         call h5open_f(ierr)
@@ -208,6 +208,10 @@
         write(hdf5version,format_hdf5) majnum,'.',minnum,'.',relnum
         call scalar_to_rank1_chr(hdf5version, value_chr)
         call add_attribute_chr(file_id, 1, "HDF5_version", value_chr)
+
+	! SE version (*** Pavel ***)
+        value_chr = "1.2"
+        call add_attribute_chr(file_id, 1, "SE_version", value_chr)
 
         ! Time
         call when(time)
@@ -357,8 +361,8 @@
            endif
         enddo
 
-        call add_dataset(group_id, dataset_cycle_name, s% nz, &
-             profile_is_int, profile_names, profile_vals, num_profile_columns)
+        !call add_dataset(group_id, dataset_cycle_name, s% nz, &
+        !     profile_is_int, profile_names, profile_vals, num_profile_columns)
 
         ! Now do iso_massf
         number_of_species = s% species
@@ -377,8 +381,13 @@
            enddo
         enddo
 
-        call add_dataset(group_id, dataset_cycle_name2, s% nz, &
-             iso_is_int, iso_names, iso_massf, number_of_species)
+        !call add_dataset(group_id, dataset_cycle_name2, s% nz, &
+        !     iso_is_int, iso_names, iso_massf, number_of_species)
+
+
+        call add_dataset2(group_id, dataset_cycle_name, s% nz, &
+            profile_is_int, profile_names, profile_vals, num_profile_columns, &
+            iso_is_int, iso_names, iso_massf, number_of_species)
 
         deallocate(iso_massf)
         deallocate(iso_is_int)
@@ -663,6 +672,162 @@
       end subroutine add_dataset
 
 
+      !!!!!!!!!!!!!!!!!!!!!!!!!!!!
+      ! Function adding a dataset.
+      !!!!!!!!!!!!!!!!!!!!!!!!!!!!
+      subroutine add_dataset2(target_id, dset_name, n_points, &
+            profile_is_int, profile_names, profile_vals, num_profile_columns, &
+            iso_is_int, iso_names, iso_massf, number_of_species)
+
+            integer(HID_T),    intent(in) :: target_id        ! Target (file or group) identifier
+            character(len=*),  intent(in) :: dset_name        ! Dataset name
+            integer,           intent(in) :: n_points         ! Number of mesh points (size of the dataset)
+
+            character (len=maxlen_profile_column_name), intent(in), pointer :: profile_names(:) ! num_profiles_columns
+            double precision, intent(in), pointer :: profile_vals(:,:) ! (nz,num_profile_columns)
+            logical, intent(in), pointer :: profile_is_int(:) ! true if the values in the profile column are integers
+            integer :: num_profile_columns
+            integer, pointer :: array_int(:)
+
+
+
+            character (len=maxlen_profile_column_name), intent(in), pointer :: iso_names(:) ! number_of_species
+            logical, intent(in), pointer :: iso_is_int(:) ! true if the values in the profile column are integers
+            double precision, intent(in), pointer :: iso_massf(:,:) !(nz, number_of_species)
+            integer, intent(in) :: number_of_species
+            integer(SIZE_T), dimension(number_of_species) :: iso_profile_size     ! Memory datatype sizes
+            integer(SIZE_T), dimension(number_of_species) :: iso_profile_offset   ! Memory datatype offsets
+            integer(HID_T),  dimension(number_of_species) :: iso_profile_id       ! Memory datatype identifier
+            integer(HID_T) :: array_tid     ! Compound datatype identifier
+
+            integer(HID_T) :: id          ! Dataset identifier
+            integer(HID_T) :: space_id    ! Dataspace identifier
+            integer(HID_T) :: plist_id    ! Dataset transfer property
+            integer(HID_T) :: type_id     ! Compound datatype identifier
+            integer        :: rank = 1    ! Dataset rank
+
+            integer(SIZE_T) :: type_size_total  ! Size of the entire datatype
+            integer(SIZE_T) :: type_sized       ! Size of the double precision datatype
+            integer(SIZE_T) :: type_sizei       ! Size of the integer datatype
+            integer(SIZE_T) :: type_sizec       ! Size of the character datatype
+            integer(SIZE_T) :: offset           ! Member's offset
+
+            integer(SIZE_T), dimension(num_profile_columns+1) :: profile_size     ! Memory datatype sizes
+            integer(SIZE_T), dimension(num_profile_columns+1) :: profile_offset   ! Memory datatype offsets
+            integer(HID_T),  dimension(num_profile_columns+1) :: profile_id       ! Memory datatype identifier
+
+            integer(HSIZE_T), dimension(1) :: dims
+            integer(HSIZE_T), dimension(1) :: data_dims
+            integer(HSIZE_T), dimension(2) :: iso_dims
+
+            integer :: i
+
+            ! Dims
+            dims(1) = n_points
+            data_dims(1) = n_points
+            iso_dims(1) = n_points
+            iso_dims(2) = number_of_species
+
+            ! initialization
+            ! First calculate total size by calculating sizes of each member
+            call h5tget_size_f(H5T_NATIVE_DOUBLE, type_sized, error)
+            call h5tget_size_f(H5T_NATIVE_integer, type_sizei, error)
+            call h5tget_size_f(H5T_NATIVE_character, type_sizec, error)
+
+            type_size_total = 0
+            profile_offset(1) = 0
+
+            do i=1, num_profile_columns
+            if (profile_is_int(i)) then
+                  profile_size(i) = type_sizei
+            else
+                  profile_size(i) = type_sized
+            endif
+            if (i>1) then
+                  profile_offset(i) = profile_offset(i-1) + profile_size(i-1)
+            endif
+            type_size_total = type_size_total + profile_size(i)
+            enddo
+
+            ! Add iso_massf
+            i = num_profile_columns + 1
+            profile_size(i) = type_sized * number_of_species
+            profile_offset(i) = profile_offset(i-1) + profile_size(i-1)
+            type_size_total = type_size_total + profile_size(i)
+
+            ! Set dataset transfer property to preserve partially initialized fields
+            ! during write/read to/from dataset with compound datatype.
+            call h5pcreate_f(H5P_DATASET_XFER_F, plist_id, error)
+            call h5pset_preserve_f(plist_id, .TRUE., error)
+
+            ! Create the dataspace
+            call h5screate_simple_f(rank, dims, space_id, error)
+
+            ! Create compound datatype.
+            call h5tcreate_f(H5T_COMPOUND_F, type_size_total, type_id, error)
+
+            ! Create array datatypes for file and memory.
+            !
+            CALL H5Tarray_create_f(H5T_NATIVE_DOUBLE, 1, iso_dims(2), array_tid, error)
+
+            ! insert members
+            do i=1, num_profile_columns
+            if (profile_is_int(i)) then
+                  call h5tinsert_f(type_id, profile_names(i), profile_offset(i), H5T_NATIVE_integer, error)
+            else
+                  call h5tinsert_f(type_id, profile_names(i), profile_offset(i), H5T_NATIVE_DOUBLE, error)
+            endif
+            enddo
+            i = num_profile_columns + 1
+            call h5tinsert_f(type_id, 'iso_massf', profile_offset(i), array_tid, error)
+
+            ! Create the dataset with compound datatype.
+            call h5dcreate_f(target_id, dset_name, type_id, space_id, id, error)
+
+            ! Create memory types. We have to create a compound datatype
+            ! for each member we want to write.
+            offset = 0
+            ! integers
+            do i=1, num_profile_columns
+            call h5tcreate_f(H5T_COMPOUND_F, profile_size(i), profile_id(i), error)
+            if (profile_is_int(i)) then
+                  call h5tinsert_f(profile_id(i), profile_names(i), offset, H5T_NATIVE_integer, error)
+            else
+                  call h5tinsert_f(profile_id(i), profile_names(i), offset, H5T_NATIVE_DOUBLE, error)
+            endif
+            enddo
+            i = num_profile_columns + 1
+            call h5tcreate_f(H5T_COMPOUND_F, profile_size(i), profile_id(i), error)
+            call h5tinsert_f(profile_id(i), 'iso_massf', offset, array_tid, error)
+
+            ! Write data by fields in the datatype. Fields order is not important.
+            ! integers
+            do i=1, num_profile_columns
+            if (profile_is_int(i)) then
+                  call array_double2int(profile_vals(:,i), n_points, array_int)
+                  call h5dwrite_f(id, profile_id(i), array_int, data_dims, error, xfer_prp = plist_id)
+            else
+                  call h5dwrite_f(id, profile_id(i), profile_vals(:,i), data_dims, error, xfer_prp = plist_id)
+            endif
+            enddo
+            i = num_profile_columns + 1
+            call h5dwrite_f(id, profile_id(i), transpose(iso_massf(:,:)), iso_dims, error, xfer_prp = plist_id)
+
+            ! End access to the dataset and release resources used by it.
+            call h5dclose_f(id, error)
+
+            ! Terminate access to the data space.
+            call h5sclose_f(space_id, error)
+
+            ! Terminate access to the datatype
+            call h5tclose_f(type_id, error)
+            do i=1, num_profile_columns
+            call h5tclose_f(profile_id(i), error)
+            enddo
+
+      end subroutine add_dataset2
+
+
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 ! Function transforming an array of floats into an array of ints.
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
@@ -771,3 +936,38 @@
         string2 = string2(1:i2)
 
       end subroutine remove_white_spaces
+
+
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+! Function extracting the profile name from a string.
+! It removes everything after the first exclamation mark found
+! and ajusts left and right for space
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+      subroutine extract_profile_name(string1, string2)
+
+         character(len=256), intent(in) :: string1
+         character(len=256), intent(out) :: string2
+
+         integer :: string_len
+         integer :: i1
+
+         string2 = adjustl(string1)
+         string_len = len_trim(string2)
+         if (string_len .eq. 0) then
+            string2 = ''
+         else
+            i1 = 1
+            do while (i1 <= string_len)
+               if (string2(i1:i1) .eq. '!') then
+                  goto 222
+               endif
+               i1 = i1 + 1
+            end do
+
+   222      if (i1 .eq. 1) then
+               string2 = ''
+            else
+               string2 = string2(1:i1-1)
+            endif
+         endif
+      end subroutine extract_profile_name

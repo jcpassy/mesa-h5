@@ -24,11 +24,12 @@
       character (len=256) :: hdf5_prefix  = ''
       character (len=256) :: hdf5_codev   = ''
       character(len=256), parameter :: hdf5_modname      = 'HDF5'
+      character(len=256), parameter :: hdf5_profile_list = 'hdf5_profile_columns.list'
 
       character(len=*), parameter :: head_cycle_name     = 'cycle' 
       character(len=*), parameter :: dataset_cycle_name  = 'SE_DATASET'
       character(len=*), parameter :: dataset_cycle_name2 = 'ISO_MASSF'
 
-      integer, parameter :: hdf5_num_mod_output = 50
+      integer, parameter :: hdf5_num_mod_output = 100
 
       logical, parameter :: change_names = .true.
