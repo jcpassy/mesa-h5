@@ -2,7 +2,7 @@ MESA_H5
 =======
 
 This is the new implementation of [HDF5](https://support.hdfgroup.org/HDF5/) support for MESA
-based on the former ``SE`` format. It provides ``mppnp`` compatibility.
+based on the former ``SE`` format. It provides ``mppnp`` compatibility. EK: test
 
 Requirements
 ------------
