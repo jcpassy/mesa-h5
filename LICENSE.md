@@ -1,6 +1,6 @@
 BSD 3-Clause License
 
-Copyright (c) 2014-2018, NuGrid Team
+Copyright (c) 2014-2018, Jean-Claude Passy, NuGrid Team
 All rights reserved.
 
 Redistribution and use in source and binary forms, with or without

@@ -1,8 +1,10 @@
-MESA_H5
+MESA-H5
 =======
 
-This is the new implementation of [HDF5](https://support.hdfgroup.org/HDF5/) support for MESA
-based on the former ``SE`` format. It provides ``mppnp`` compatibility.
+This is the new implementation of [HDF5](https://support.hdfgroup.org/HDF5/) support for
+[MESA](http://mesa.sourceforge.net/) based on the former ``SE`` format.
+It is used by the [NuGrid collaboration](https://github.com/NuGrid)
+and provides ``mppnp`` compatibility.
 
 Requirements
 ------------
@@ -38,7 +40,8 @@ to a value of 100 or more depending on how long you will expect your run to be. 
 Testing
 -------
 
-If you would like to run an example, you can use the inlist and columns files located in the ``test`` folder.
+If you would like to run an example, you can use the inlist and columns files located in the ``test`` folder. An IPython notebook is also provided as an example for the
+analysis of the HDF5 data created by this framework.
 
 Known issues and tips
 ---------------------
@@ -58,7 +61,8 @@ Authors
 Copyright
 ---------
 
-Copyright (c) 2014 - 2018, NuGrid Team. All rights reserved.
+Copyright (c) 2014 - 2018, Jean-Claude Passy, NuGrid Collaboration.
+All rights reserved.
 
 License
 -------
