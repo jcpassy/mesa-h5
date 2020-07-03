@@ -25,9 +25,10 @@ Profiles in the HDF5 file
 
 The user must specify which MESA profiles should be included in the HDF5. This is done in the file ``hdf5_profile_columns.list`` (default name) similar to the ``profile_columns.list`` MESA file.
 
-Note that the profiles in the HDF5 file **MUST** be a subset of the profiles written out in the MESA ASCII files. So whatever contains ``hdf5_profile_columns.list`` should also be either in ``profile_columns.list`` or is calculated in the extra routines. The ``profile_columns.list`` needs to include ``dm``, ``radius``, ``rmid``, ``temperature``, ``log_D_mix``, ``mass`` and ``rho``.
+Note that the profiles in the HDF5 file **MUST** be a subset of the profiles written out in the MESA ASCII files. So whatever contains ``hdf5_profile_columns.list`` should also be either in ``profile_columns.list`` or is calculated in the extra routines. 
+For example, when the default ``hdf5_profile_columns.list`` is used the ``profile_columns.list`` needs to include ``dm``, ``radius``, ``rmid``, ``temperature``, ``log_D_mix``, ``mass`` and ``rho``. The other profiles (``delta_mass`` and ``dcoeff``) are calculated by the subroutines provided in this package.
 
-Also the MESA ``profile_columns.list`` **MUST** contain ``time_step``.
+Also the MESA ``profile_columns.list`` **MUST** contain ``time_step`` if the HDF5 output will be used for [post-processing](https://github.com/NuGrid/NuPPN).
 
 Customization
 -------------
